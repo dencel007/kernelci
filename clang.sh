@@ -91,7 +91,7 @@ echo -e "> Opening .config file...\n"
 $MAKE_STATEMENT O=out SUBARCH=arm64 santoni_defconfig
 make -j$(nproc --all) O=out \
                       ARCH=arm64 \
-                      CC=~$PHANTOM_WORKING_DIR/$CLANGV/bin/clang \
+                      CC=$CLANGV/bin/clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
                       CROSS_COMPILE=$PHANTOM_WORKING_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 echo -e "> Starting kernel compilation using .config file...\n"
