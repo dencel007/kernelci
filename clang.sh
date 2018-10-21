@@ -105,7 +105,7 @@ start=$SECONDS
 # different optimization level. 
 # To see how it works, check the Makefile ... file, 
 # line 625 to 628, located in the root dir of this kernel.
-KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Werror=implicit-function-declaration -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
+KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
 KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
 
 if [[ ! -f "${IMAGE_OUT}" ]]; then
