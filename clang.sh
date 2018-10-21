@@ -87,8 +87,8 @@ fi
 # Build starts here
 # =================
 echo -e "> Opening .config file...\n"
+make O=out ARCH=arm64 santoni_defconfig
 
-$MAKE_STATEMENT O=out SUBARCH=arm64 santoni_defconfig
 make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       CC=$CLANGV/bin/clang \
@@ -108,7 +108,7 @@ start=$SECONDS
 KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Werror=implicit-function-declaration -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
 KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
 
-if [[ ! -f "${IMAGE}" ]]; then
+if [[ ! -f "${IMAGE_OUT}" ]]; then
     echo -e "\n\033[0;31m> Image.gz-dtb not FOUND. Build failed \033[0;0m\n";
     curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="Image.gz-dtb not FOUND. Build failed !. $KERNEL_NAME CI Build stopped unexpectedly ! " -d chat_id=$CHAT_ID
     success=false;
