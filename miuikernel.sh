@@ -182,7 +182,7 @@ branch="$ebook Branch : $BRANCH_NAME"
 time="$eclock Time Taken : $(($duration%3600/60))m:$(($duration%60))s"
 commit="$ecommit Last Commit :  
 $(git log --pretty=format:'%h : %s' -5)"
-curl -F chat_id="-1001124689793" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
+curl -F chat_id="-1001197283036" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
 
 $header
 $branch 
