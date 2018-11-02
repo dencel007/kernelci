@@ -136,7 +136,6 @@ rm -r modules
 mkdir -p modules
 
 find . -name '*.ko' -exec cp {} $MODULES_DIR/ \;
-chmod 755 $MODULES_DIR/*
 
 "$CROSS_COMPILE"strip --strip-unneeded $MODULES_DIR/* 2>/dev/null
 "$CROSS_COMPILE"strip --strip-debug $MODULES_DIR/* 2>/dev/null
@@ -147,6 +146,8 @@ rm -r $KERNEL_DIR/AnyKernel2/modules/system/lib/modules/pronto
 cp -f $MODULES_DIR/*.ko $KERNEL_DIR/AnyKernel2/modules/system/lib/modules/
 mkdir -p $KERNEL_DIR/AnyKernel2/modules/system/lib/modules/pronto
 mv -f $KERNEL_DIR/AnyKernel2/modules/system/lib/modules/wlan.ko $KERNEL_DIR/AnyKernel2/modules/system/lib/modules/pronto/pronto_wlan.ko
+
+chmod -R 755 $MODULES_DIR/*
 
 # Module Setup Ends
 # =================
