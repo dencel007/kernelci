@@ -37,6 +37,7 @@ export PHANTOM_WORKING_DIR=$(dirname "$(pwd)")
 export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
 export DEVICE="Santoni";
+export LC="LINUX_COMPILER"
 
 if [[ $TC_SEL != clang ]]; then
   CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
@@ -148,6 +149,7 @@ if [[ ! -f "${IMAGE_OUT}" ]]; then
 else
     echo -e "\n\033[0;32m> Image.gz-dtb FOUND. Build Successful \033[0;0m\n" ;
     success=true;
+    grep "$LC" ${OUT_DIR}/include/generated/compile.h
 fi
 
 # Get current kernel version
