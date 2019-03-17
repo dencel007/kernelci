@@ -9,11 +9,13 @@
 # 1. ARCH=arm64
 # 2. export KERNEL_NAME=lineage-16.0
 # 3. export BRANCH_NAME=lineage-16.0
-# 4. export KERNEL_DIR=~/url_to_kernel_dir
-# 5. export CHAT_ID=@telegram_chat_id
+# 4. export KERNEL_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
+# 5. export CHANNEL_NAME=@telegram_channel_name (@channel_name)
 # 6. export TOOLCHAIN=aarch64-linux-android-4.9/bin/aarch64-linux-android-        (GCC 4.9 for example)
 # 7. export CLANGV=~/linux-x86-master-clang-4679922                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
+# 9. export CHANNEL_ID="-123456789" (channel_id)
+#10. export TC_SEL=clang9
 
 # See ci_script.txt for example server-side setup
 
@@ -36,17 +38,36 @@ export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
 export DEVICE="Santoni";
 
+if [[ TC_SEL != clang9 ]]; then
+  CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
+fi
+
 export ZIP_DIR="${KERNEL_DIR}/AnyKernel2"
 export ZIP_NAME="${KERNEL_NAME}-${DEVICE}-$(date +%Y%m%d-%H%M).zip";
 export FINAL_ZIP="${ZIP_DIR}/${ZIP_NAME}"
 
 export IMAGE="${KERNEL_DIR}/arch/arm64/boot/Image.gz-dtb";
 
+if [[ TC_SEL == "clang9" ]]; then
+  export IMAGE_OUT="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz-dtb";
+
+  if [ -e out ]; then
+    rm -rf out;
+  else
+    mkdir -p out;
+  fi;
 
 $MAKE_STATEMENT mrproper;
 $MAKE_STATEMENT clean;
+$MAKE_STATEMENT O=out clean 
+$MAKE_STATEMENT O=out mrproper 
+rm -rf $IMAGE_OUT
 rm -rf $IMAGE
-
+else
+$MAKE_STATEMENT mrproper;
+$MAKE_STATEMENT clean;
+rm -rf $IMAGE
+fi
 # CCACHE configuration
 # ====================
 # If you want you can install ccache to speedup recompilation time.
@@ -82,7 +103,6 @@ fi
 # ==================================
 # point CROSS_COMPILE to the folder of the desired toolchain
 # don't forget to specify the prefix. Mine is: aarch64-linux-android-
-CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
 
 # Are we using ccache?
 if [ -n "$USE_CCACHE" ] 
@@ -92,13 +112,25 @@ fi
 
 # Build starts here
 # =================
-echo -e "> Opening .config file...\n"
+if [[ TC_SEL == clang9 ]]; then
+  echo -e "> Opening .config file...\n"
+make O=out ARCH=arm64 santoni_defconfig
 
+make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      CC=$CLANGV/bin/clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE=$PHANTOM_WORKING_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+echo -e "> Starting kernel compilation using .config file...\n"
+
+start=$SECONDS
+echo -e "> Opening .config file...\n"
+else
 ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make $DEFCONFIG -j8;
 echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
-
+fi
 # Want custom kernel flags?
 # =========================
 # KBUILD_PHANTOM_CFLAGS: Here you can set custom compilation 
@@ -111,7 +143,7 @@ KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS ARCH=arm64 SUBARCH=arm64 CROSS_COMP
 
 if [[ ! -f "${IMAGE}" ]]; then
     echo -e "\n\033[0;31m> Image.gz-dtb not FOUND. Build failed \033[0;0m\n";
-    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="Image.gz-dtb not FOUND. Build failed !. $KERNEL_NAME CI Build stopped unexpectedly ! " -d chat_id=$CHAT_ID
+    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="Image.gz-dtb not FOUND. Build failed !. $KERNEL_NAME CI Build stopped unexpectedly ! " -d chat_id=$CHANNEL_ID
     success=false;
     exit 1;
 else
@@ -136,7 +168,7 @@ function transfer() {
   url="$(curl -# -T $1 https://transfer.sh)";
   printf '\n';
   echo -e "\n\033[0;32m> Download ${zip_name} at ${url} \033[0;0m\n" ;
-    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="$url" -d chat_id=$CHAT_ID
+    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="$url" -d chat_id=$CHANNEL_NAME
 }
 
 cd $KERNEL_DIR
@@ -171,13 +203,13 @@ branch="$ebook Branch : $BRANCH_NAME"
 time="$eclock Time Taken : $(($duration%3600/60))m:$(($duration%60))s"
 commit="$ecommit Last Commit :  
 $(git log --pretty=format:'%h : %s' -5)"
-curl -F chat_id="-1001124689793" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
+curl -F chat_id="$CHANNEL_ID" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
 
 $header
 $branch 
 $time
 $commit" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
-curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg"  -d chat_id=$CHAT_ID
+curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg"  -d chat_id=$CHANNEL_NAME
 
 rm -rf ${ZIP_DIR}/${ZIP_NAME}
 
