@@ -5,16 +5,16 @@
 
 # Notes
 # =====
-# Before building, you should give some export variables such as
+# Before building, you should give some export variables such as following ones in build
 # 1. ARCH=arm64
 # 2. export KERNEL_NAME=lineage-16.0
 # 3. export BRANCH_NAME=lineage-16.0
 # 4. export KERNEL_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
 # 5. export CHANNEL_NAME=@telegram_channel_name (@channel_name)
 # 6. export TOOLCHAIN=aarch64-linux-android-4.9/bin/aarch64-linux-android-        (GCC 4.9 for example)
-# 7. export CLANGV=~/linux-x86-master-clang-4679922                               (Google Clang 4679922 for example)
+# 7. export CLANGV=~/linux-x86-master-clang-r353983                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
-# 9. export CHANNEL_ID="-123456789" (channel_id)
+# 9. export CHANNEL_ID=-123456789 (channel_id)
 #10. export TC_SEL=clang9
 
 # See ci_script.txt for example server-side setup
@@ -46,28 +46,20 @@ export ZIP_DIR="${KERNEL_DIR}/AnyKernel2"
 export ZIP_NAME="${KERNEL_NAME}-${DEVICE}-$(date +%Y%m%d-%H%M).zip";
 export FINAL_ZIP="${ZIP_DIR}/${ZIP_NAME}"
 
-export IMAGE="${KERNEL_DIR}/arch/arm64/boot/Image.gz-dtb";
+export IMAGE_OUT="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz-dtb";
 
-if [[ TC_SEL == "clang9" ]]; then
-  export IMAGE_OUT="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz-dtb";
-
-  if [ -e out ]; then
-    rm -rf out;
-  else
-    mkdir -p out;
-  fi;
+if [ -e out ]; then
+  rm -rf out;
+else
+  mkdir -p out;
+fi;
 
 $MAKE_STATEMENT mrproper;
 $MAKE_STATEMENT clean;
 $MAKE_STATEMENT O=out clean 
 $MAKE_STATEMENT O=out mrproper 
 rm -rf $IMAGE_OUT
-rm -rf $IMAGE
-else
-$MAKE_STATEMENT mrproper;
-$MAKE_STATEMENT clean;
-rm -rf $IMAGE
-fi
+
 # CCACHE configuration
 # ====================
 # If you want you can install ccache to speedup recompilation time.
@@ -114,6 +106,7 @@ fi
 # =================
 if [[ TC_SEL == clang9 ]]; then
   echo -e "> Opening .config file...\n"
+  echo -e "> BUILDING WITH CLANG TOOLCHAIN\n"
 make O=out ARCH=arm64 santoni_defconfig
 
 make -j$(nproc --all) O=out \
@@ -125,8 +118,9 @@ echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
 echo -e "> Opening .config file...\n"
+echo -e "> BUILDING WITH NORMAL TOOLCHAIN\n"
 else
-ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make $DEFCONFIG -j8;
+ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make O=out $DEFCONFIG -j$(nproc --all);
 echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
