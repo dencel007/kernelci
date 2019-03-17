@@ -46,6 +46,7 @@ export ZIP_DIR="${KERNEL_DIR}/AnyKernel2"
 export ZIP_NAME="${KERNEL_NAME}-${DEVICE}-$(date +%Y%m%d-%H%M).zip";
 export FINAL_ZIP="${ZIP_DIR}/${ZIP_NAME}"
 
+export OUT_DIR="${KERNEL_DIR}/out"
 export IMAGE_OUT="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz-dtb";
 
 if [ -e out ]; then
@@ -54,10 +55,8 @@ else
   mkdir -p out;
 fi;
 
-$MAKE_STATEMENT mrproper;
-$MAKE_STATEMENT clean;
-$MAKE_STATEMENT O=out clean 
-$MAKE_STATEMENT O=out mrproper 
+$MAKE_STATEMENT O=${OUT_DIR} clean 
+$MAKE_STATEMENT O=${OUT_DIR} mrproper 
 rm -rf $IMAGE_OUT
 
 # CCACHE configuration
@@ -109,7 +108,7 @@ if [[ $TC_SEL = clang9 ]]; then
   echo -e "\n\033[0;31m> BUILDING WITH CLANG TOOLCHAIN\033[0;0m\n\n"
 make O=out ARCH=arm64 santoni_defconfig
 
-make -j$(nproc --all) O=out \
+make -j$(nproc --all) O=${OUT_DIR} \
                       ARCH=arm64 \
                       CC=$CLANGV/bin/clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
@@ -119,8 +118,9 @@ echo -e "> Starting kernel compilation using .config file...\n"
 start=$SECONDS
 echo -e "> Opening .config file...\n"
 else
+  
 echo -e "\n\033[0;31m> BUILDING WITH NORMAL TOOLCHAIN \033[0;0m\n\n"
-ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make O=out $DEFCONFIG -j$(nproc --all);
+ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make O=${OUT_DIR} $DEFCONFIG -j$(nproc --all);
 echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
