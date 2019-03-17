@@ -11,8 +11,8 @@
 # 3. export BRANCH_NAME=lineage-16.0
 # 4. export KERNEL_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
 # 5. export CHANNEL_NAME=@telegram_channel_name (@channel_name)
-# 6. export TOOLCHAIN=aarch64-linux-android-4.9/bin/aarch64-linux-android-        (GCC 4.9 for example)
-# 7. export CLANGV=~/linux-x86-master-clang-r353983                               (Google Clang 4679922 for example)
+# 6. export TOOLCHAIN=aarch64-linux-android/bin/aarch64-linux-android-        (GCC 4.9 for example)
+# 7. export CLANGV=~/linux-x86-master-clang                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
 # 9. export CHANNEL_ID=-123456789 (channel_id)
 #10. export TC_SEL=clang
@@ -113,9 +113,9 @@ PATH="${CLANGV}/bin:${TOOLCHAIN}/bin:${PATH}" \
 make -j$(nproc --all) O=${OUT_DIR} \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
-                      CC=$CLANGV/bin/clang \
+                      CC=${CLANGV}/bin/clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
-                      CROSS_COMPILE=$PHANTOM_WORKING_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+                      CROSS_COMPILE=${PHANTOM_WORKING_DIR}/${TOOLCHAIN}
 echo -e "> Starting Clang kernel compilation using .config file...\n"
 
 start=$SECONDS
