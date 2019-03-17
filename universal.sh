@@ -15,7 +15,7 @@
 # 7. export CLANGV=~/linux-x86-master-clang-r353983                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
 # 9. export CHANNEL_ID=-123456789 (channel_id)
-#10. export TC_SEL=clang9
+#10. export TC_SEL=clang
 
 # See ci_script.txt for example server-side setup
 
@@ -38,7 +38,7 @@ export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
 export DEVICE="Santoni";
 
-if [[ TC_SEL != clang9 ]]; then
+if [[ $TC_SEL != clang ]]; then
   CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
 fi
 
@@ -103,24 +103,29 @@ fi
 
 # Build starts here
 # =================
-if [[ $TC_SEL = clang9 ]]; then
+if [[ $TC_SEL = clang ]]; then
   echo -e "> Opening .config file...\n"
   echo -e "\n\033[0;31m> BUILDING WITH CLANG TOOLCHAIN\033[0;0m\n\n"
-make O=out ARCH=arm64 santoni_defconfig
+make O=${OUT_DIR} ARCH=arm64 santoni_defconfig
 
+PATH="${CLANGV}/bin:${TOOLCHAIN}/bin:${PATH}" \
 make -j$(nproc --all) O=${OUT_DIR} \
                       ARCH=arm64 \
+                      SUBARCH=arm64 \
                       CC=$CLANGV/bin/clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
                       CROSS_COMPILE=$PHANTOM_WORKING_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-echo -e "> Starting kernel compilation using .config file...\n"
+echo -e "> Starting Clang kernel compilation using .config file...\n"
 
 start=$SECONDS
 echo -e "> Opening .config file...\n"
 else
-  
+
 echo -e "\n\033[0;31m> BUILDING WITH NORMAL TOOLCHAIN \033[0;0m\n\n"
-ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make O=${OUT_DIR} $DEFCONFIG -j$(nproc --all);
+
+ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE 
+make O=${OUT_DIR} $DEFCONFIG 
+make O=${OUT_DIR} -j$(nproc --all);
 echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
@@ -135,7 +140,7 @@ fi
 KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
 KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
 
-if [[ ! -f "${IMAGE}" ]]; then
+if [[ ! -f "${IMAGE_OUT}" ]]; then
     echo -e "\n\033[0;31m> Image.gz-dtb not FOUND. Build failed \033[0;0m\n";
     curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="Image.gz-dtb not FOUND. Build failed !. $KERNEL_NAME CI Build stopped unexpectedly ! " -d chat_id=$CHANNEL_ID
     success=false;
@@ -167,7 +172,7 @@ function transfer() {
 
 cd $KERNEL_DIR
 
-cp $KERNEL_DIR/arch/arm64/boot/Image.gz-dtb $KERNEL_DIR/AnyKernel2
+cp $IMAGE_OUT $KERNEL_DIR/AnyKernel2
 cd $KERNEL_DIR/AnyKernel2/
 rm -rf zImage 
 mv Image.gz-dtb zImage
