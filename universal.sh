@@ -202,19 +202,22 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
+tctype='grep "$LC" ${OUT_DIR}/include/generated/compile.h'
 
 message="$egear $KERNEL_NAME CI Build Successful "
 header="$ebeginner BUILD DETAILS : "
 branch="$ebook Branch : $BRANCH_NAME"
 time="$eclock Time Taken : $(($duration%3600/60))m:$(($duration%60))s"
 commit="$ecommit Last Commit :  
-$(git log --pretty=format:'%h : %s' -5)"
+$(git log --pretty=format:'%h : %s' -2)"
+toolchaintype="$tctype"
 curl -F chat_id="$CHANNEL_ID" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
 
 $header
 $branch 
 $time
-$commit" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
+$commit
+$toolchaintype" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
 curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg" -d chat_id="$CHANNEL_ID"
 
 rm -rf ${ZIP_DIR}/${ZIP_NAME}
