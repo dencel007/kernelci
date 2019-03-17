@@ -104,7 +104,7 @@ fi
 
 # Build starts here
 # =================
-if [[ TC_SEL == clang9 ]]; then
+if [[ $TC_SEL = clang9 ]]; then
   echo -e "> Opening .config file...\n"
   echo -e "\n\033[0;31m> BUILDING WITH CLANG TOOLCHAIN\033[0;0m\n\n"
 make O=out ARCH=arm64 santoni_defconfig
