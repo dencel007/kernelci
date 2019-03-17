@@ -38,6 +38,12 @@ export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
 export DEVICE="Santoni";
 export LC="LINUX_COMPILER"
+export CS="clang/"
+
+printenv | sed 's/=\(.*\)/="\1"/' > env.txt
+if [[ grep "$CS" env.txt ]]; then
+  export TC_SEL=clang
+fi
 
 if [[ $TC_SEL != clang ]]; then
   CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
@@ -119,9 +125,8 @@ make -j$(nproc --all) O=${OUT_DIR} \
 echo -e "> Starting Clang kernel compilation using .config file...\n"
 
 start=$SECONDS
-echo -e "> Opening .config file...\n"
 else
-
+echo -e "> Opening .config file...\n"
 echo -e "\n\033[0;31m> BUILDING WITH NORMAL TOOLCHAIN \033[0;0m\n\n"
 
 ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE 
@@ -139,7 +144,7 @@ fi
 # To see how it works, check the Makefile ... file, 
 # line 625 to 628, located in the root dir of this kernel.
 KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
-KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
+KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS #ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
 
 if [[ ! -f "${IMAGE_OUT}" ]]; then
     echo -e "\n\033[0;31m> Image.gz-dtb not FOUND. Build failed \033[0;0m\n";
@@ -162,16 +167,6 @@ printf "\n\033[0;31m> $KERNEL_NAME CI Build Completed in %dh:%dm:%ds\033[0;0m\n 
 
 echo -e "\n\033[0;34m> ================== Now, Let's zip it ! ===================\033[0;0m\n \n"
 
-# Tranfer.sh Function
-# ==================
-function transfer() {
-  zip_name="$(echo $1 | awk -F '/' '{print $NF}')";
-  url="$(curl -# -T $1 https://transfer.sh)";
-  printf '\n';
-  echo -e "\n\033[0;32m> Download ${zip_name} at ${url} \033[0;0m\n" ;
-    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="$url" -d chat_id=$CHANNEL_NAME
-}
-
 cd $KERNEL_DIR
 
 cp $IMAGE_OUT $KERNEL_DIR/AnyKernel2
@@ -182,6 +177,16 @@ rm -rf *.zip
 zip -r9 ${FINAL_ZIP} *;
 cd -;
 
+# Tranfer.sh Function
+# ==================
+function transfer() {
+  zip_name="$(echo $1 | awk -F '/' '{print $NF}')";
+  url="$(curl -# -T $1 https://transfer.sh)";
+  printf '\n';
+  echo -e "\n\033[0;32m> Download ${zip_name} at ${url} \033[0;0m\n" ;
+  curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d text="$url" -d chat_id="$CHANNEL_ID"
+}
+
 if [ -f "$FINAL_ZIP" ];
 then
 echo -e "\n\033[0;32m> $ZIP_NAME zip can be found at $FINAL_ZIP \033[0;0m\n" ;
@@ -190,7 +195,7 @@ then
     echo -e "\n\033[0;34m> Uploading ${ZIP_NAME} to https://transfer.sh/ \033[0;0m\n" ;
     transfer "${FINAL_ZIP}";
 
-# Emojis for Output Beautification
+# Emojis for Beautification
 # ====================
 egear="⚙️"
 ebeginner="🔰"
@@ -210,7 +215,7 @@ $header
 $branch 
 $time
 $commit" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
-curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg"  -d chat_id=$CHANNEL_NAME
+curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg" -d chat_id="$CHANNEL_ID"
 
 rm -rf ${ZIP_DIR}/${ZIP_NAME}
 
