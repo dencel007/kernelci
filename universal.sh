@@ -106,7 +106,7 @@ fi
 # =================
 if [[ TC_SEL == clang9 ]]; then
   echo -e "> Opening .config file...\n"
-  echo -e "> BUILDING WITH CLANG TOOLCHAIN\n"
+  echo -e "\n\033[0;31m> BUILDING WITH CLANG TOOLCHAIN\033[0;0m\n\n"
 make O=out ARCH=arm64 santoni_defconfig
 
 make -j$(nproc --all) O=out \
@@ -118,8 +118,8 @@ echo -e "> Starting kernel compilation using .config file...\n"
 
 start=$SECONDS
 echo -e "> Opening .config file...\n"
-echo -e "> BUILDING WITH NORMAL TOOLCHAIN\n"
 else
+echo -e "\n\033[0;31m> BUILDING WITH NORMAL TOOLCHAIN \033[0;0m\n\n"
 ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE make O=out $DEFCONFIG -j$(nproc --all);
 echo -e "> Starting kernel compilation using .config file...\n"
 
