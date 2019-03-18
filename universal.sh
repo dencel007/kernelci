@@ -7,15 +7,15 @@
 # =====
 # Before building, you should give some export variables such as following ones in build
 # 1. ARCH=arm64
-# 2. export KERNEL_NAME=lineage-16.0
-# 3. export BRANCH_NAME=lineage-16.0
-# 4. export KERNEL_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
+# 2. export KERNEL_NAME=Phantom-AOSP-P
+# 3. export DIV_NAME=lineage-16.0
+# 4. export BUILD_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
 # 5. export CHANNEL_NAME=@telegram_channel_name (@channel_name)
-# 6. export TOOLCHAIN=aarch64-linux-android/bin/aarch64-linux-android-        (GCC 4.9 for example)
-# 7. export CLANGV=~/linux-x86-master-clang                               (Google Clang 4679922 for example)
+# 6. export TCDIR=aarch64-linux-android/bin/aarch64-linux-android-        (GCC 4.9 for example)
+# 7. export CDIR=~/linux-x86-master-clang                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
 # 9. export CHANNEL_ID=-123456789 (channel_id)
-#10. export TC_SEL=clang
+#10. export TC_ID=clang
 
 # See ci_script.txt for example server-side setup
 
@@ -32,32 +32,32 @@ MAKE_STATEMENT=make
 
 # ENV configuration
 # =================
-export PHANTOM_WORKING_DIR=$(dirname "$(pwd)")
+export KERNEL_WORKING_DIR=$(dirname "$(pwd)")
 
 export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
 export DEVICE="Santoni";
 export LC="LINUX_COMPILER"
-export CS="clang/"
+export ID_KEY="clang/"
 
 printenv | sed 's/=\(.*\)/="\1"/' > env.txt
-if [[ 'grep "$CS" env.txt' ]]; then
-  export TC_SEL=clang
-  echo -e "\n\033[0;31m> CLANG Branch Identified\033[0;0m\n\n"
+if [[ 'grep "$ID_KEY" env.txt' ]]; then
+  export TC_ID=clang
+  echo -e "\n\033[0;31m> Identified as a CLANG Branch \033[0;0m\n\n"
 else
-  echo -e "\n\033[0;31m> Normal Branch Identified\033[0;0m\n\n"
+  echo -e "\n\033[0;31m> Identified as a Normal Branch \033[0;0m\n\n"
 fi
 
-if [[ $TC_SEL != clang ]]; then
-  CROSS_COMPILE=$PHANTOM_WORKING_DIR/$TOOLCHAIN
+if [[ $TC_ID != clang ]]; then
+  CROSS_COMPILE=$KERNEL_WORKING_DIR/$TCDIR
 fi
 
-export ZIP_DIR="${KERNEL_DIR}/AnyKernel2"
+export ZIP_DIR="${SEMAPHORE_PROJECT_DIR}/AnyKernel2"
 export ZIP_NAME="${KERNEL_NAME}-${DEVICE}-$(date +%Y%m%d-%H%M).zip";
 export FINAL_ZIP="${ZIP_DIR}/${ZIP_NAME}"
 
-export OUT_DIR="${KERNEL_DIR}/out"
-export IMAGE_OUT="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz-dtb";
+export OUT_DIR="${SEMAPHORE_PROJECT_DIR}/out"
+export IMAGE_OUT="${SEMAPHORE_PROJECT_DIR}/out/arch/arm64/boot/Image.gz-dtb";
 
 if [ -e out ]; then
   rm -rf out;
@@ -81,15 +81,15 @@ then
   # run this script with -clear-ccache
   if [[ "$*" == *"-clear-ccache"* ]]
   then
-    echo -e "\n\033[0;31m> Cleaning $PHANTOM_WORKING_DIR/.ccache contents\033[0;0m" 
-    rm -rf "$PHANTOM_WORKING_DIR/.ccache"
+    echo -e "\n\033[0;31m> Cleaning $KERNEL_WORKING_DIR/.ccache contents\033[0;0m" 
+    rm -rf "$KERNEL_WORKING_DIR/.ccache"
   fi
   # If you want to build *without* using ccache
   # run this script with -no-ccache flag
   if [[ "$*" != *"-no-ccache"* ]] 
   then
     export USE_CCACHE=1
-    export CCACHE_DIR="$PHANTOM_WORKING_DIR/.ccache"
+    export CCACHE_DIR="$KERNEL_WORKING_DIR/.ccache"
     export CCACHE_MAX_SIZE=6G
     echo -e "\n> $(ccache -M $CCACHE_MAX_SIZE)"
     echo -e "\n\033[0;32m> Using ccache, to disable it run this script with -no-ccache\033[0;0m\n"
@@ -113,18 +113,18 @@ fi
 
 # Build starts here
 # =================
-if [[ $TC_SEL = clang ]]; then
+if [[ $TC_ID = clang ]]; then
   echo -e "> Opening .config file...\n"
   echo -e "\n\033[0;31m> BUILDING WITH CLANG TOOLCHAIN\033[0;0m\n\n"
 make O=${OUT_DIR} ARCH=arm64 santoni_defconfig
 
-PATH="${CLANGV}/bin:${TOOLCHAIN}/bin:${PATH}" \
+PATH="${CDIR}/bin:${TCDIR}/bin:${PATH}" \
 make -j$(nproc --all) O=${OUT_DIR} \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
-                      CC=${CLANGV}/bin/clang \
+                      CC=${CDIR}/bin/clang \
                       CLANG_TRIPLE=aarch64-linux-gnu- \
-                      CROSS_COMPILE=${PHANTOM_WORKING_DIR}/${TOOLCHAIN}
+                      CROSS_COMPILE=${KERNEL_WORKING_DIR}/${TCDIR}
 echo -e "> Starting Clang kernel compilation using .config file...\n"
 
 start=$SECONDS
@@ -141,13 +141,13 @@ start=$SECONDS
 fi
 # Want custom kernel flags?
 # =========================
-# KBUILD_PHANTOM_CFLAGS: Here you can set custom compilation 
+# KBUILD_KERNEL_CFLAGS: Here you can set custom compilation 
 # flags to turn off unwanted warnings, or even set a 
 # different optimization level. 
 # To see how it works, check the Makefile ... file, 
 # line 625 to 628, located in the root dir of this kernel.
-KBUILD_PHANTOM_CFLAGS="-Wno-misleading-indentation -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
-KBUILD_PHANTOM_CFLAGS=$KBUILD_PHANTOM_CFLAGS #ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
+KBUILD_KERNEL_CFLAGS="-Wno-misleading-indentation -Wno-bool-compare -mtune=cortex-a53 -march=armv8-a+crc+simd+crypto -mcpu=cortex-a53 -O2" 
+KBUILD_KERNEL_CFLAGS=$KBUILD_KERNEL_CFLAGS #ARCH=arm64 SUBARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE $MAKE_STATEMENT -j8
 
 if [[ ! -f "${IMAGE_OUT}" ]]; then
     echo -e "\n\033[0;31m> Image.gz-dtb not FOUND. Build failed \033[0;0m\n";
@@ -161,8 +161,8 @@ else
 fi
 
 # Get current kernel version
-PHANTOM_VERSION=$(head -n3 Makefile | sed -E 's/.*(^\w+\s[=]\s)//g' | xargs | sed -E 's/(\s)/./g')
-echo -e "\n\n\033[0;34m> Packing PHANTOM Kernel v$PHANTOM_VERSION $ZIP_NAME\n\033[0;0m\n" 
+KERNEL_VERSION=$(head -n3 Makefile | sed -E 's/.*(^\w+\s[=]\s)//g' | xargs | sed -E 's/(\s)/./g')
+echo -e "\n\n\033[0;34m> Packing Kernel v$KERNEL_VERSION $ZIP_NAME\n\033[0;0m\n" 
 
 end=$SECONDS
 duration=$(( end - start ))
@@ -170,10 +170,10 @@ printf "\n\033[0;31m> $KERNEL_NAME CI Build Completed in %dh:%dm:%ds\033[0;0m\n 
 
 echo -e "\n\033[0;34m> ================== Now, Let's zip it ! ===================\033[0;0m\n \n"
 
-cd $KERNEL_DIR
+cd $SEMAPHORE_PROJECT_DIR
 
-cp $IMAGE_OUT $KERNEL_DIR/AnyKernel2
-cd $KERNEL_DIR/AnyKernel2/
+cp $IMAGE_OUT $SEMAPHORE_PROJECT_DIR/AnyKernel2
+cd $SEMAPHORE_PROJECT_DIR/AnyKernel2/
 rm -rf zImage 
 mv Image.gz-dtb zImage
 rm -rf *.zip
@@ -205,11 +205,11 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
-tctype=grep "$LC" ${OUT_DIR}/include/generated/compile.h
+tctype=source ${OUT_DIR}/include/generated/compile.h && echo $LINUX_COMPILER
 
 message="$egear $KERNEL_NAME CI Build Successful "
 header="$ebeginner BUILD DETAILS : "
-branch="$ebook Branch : $BRANCH_NAME"
+branch="$ebook Branch : $DIV_NAME"
 time="$eclock Time Taken : $(($duration%3600/60))m:$(($duration%60))s"
 commit="$ecommit Last Commit :  
 $(git log --pretty=format:'%h : %s' -2)"
