@@ -9,12 +9,11 @@
 # 1. ARCH=arm64
 # 2. export KERNEL_NAME=Phantom-AOSP-P
 # 3. export DIV_NAME=lineage-16.0
-# 4. export BUILD_DIR=~/url_to_kernel_dir (export KERNEL_DIR=~/my-kernel-tree)(https://semaphoreci.com/username/my-kernel-tree)
+# 4. export CHANNEL_ID=-123456789 (channel_id)
 # 5. export CHANNEL_NAME=@telegram_channel_name (@channel_name)
 # 6. export TCDIR=aarch64-linux-android/bin/aarch64-linux-android-        (GCC 4.9 for example)
 # 7. export CDIR=~/linux-x86-master-clang                               (Google Clang 4679922 for example)
 # 8. export DEFCONFIG=device_defconfig
-# 9. export CHANNEL_ID=-123456789 (channel_id)
 #10. export TC_ID=clang
 
 # See ci_script.txt for example server-side setup
@@ -205,7 +204,8 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
-tctype=source ${OUT_DIR}/include/generated/compile.h && echo $LINUX_COMPILER
+source ${OUT_DIR}/include/generated/compile.h tctype="$LINUX_COMPILER"
+
 
 message="$egear $KERNEL_NAME CI Build Successful "
 header="$ebeginner BUILD DETAILS : "
@@ -213,14 +213,14 @@ branch="$ebook Branch : $DIV_NAME"
 time="$eclock Time Taken : $(($duration%3600/60))m:$(($duration%60))s"
 commit="$ecommit Last Commit :  
 $(git log --pretty=format:'%h : %s' -2)"
-toolchaintype="$tctype"
+
 curl -F chat_id="$CHANNEL_ID" -F document=@"${ZIP_DIR}/$ZIP_NAME" -F caption="$message 
 
 $header
 $branch 
 $time
 $commit
-$toolchaintype" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
+$tctype" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
 curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="CAADBQADuQADLG6EE9HnR-_L0F2YAg" -d chat_id="$CHANNEL_ID"
 
 rm -rf ${ZIP_DIR}/${ZIP_NAME}
