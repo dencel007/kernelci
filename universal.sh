@@ -41,7 +41,7 @@ export LC="LINUX_COMPILER"
 export CS="clang/"
 
 printenv | sed 's/=\(.*\)/="\1"/' > env.txt
-if [[ grep "$CS" env.txt ]]; then
+if [[ 'grep "$CS" env.txt' ]]; then
   export TC_SEL=clang
 fi
 
