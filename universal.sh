@@ -43,6 +43,9 @@ export CS="clang/"
 printenv | sed 's/=\(.*\)/="\1"/' > env.txt
 if [[ 'grep "$CS" env.txt' ]]; then
   export TC_SEL=clang
+  echo -e "\n\033[0;31m> CLANG Branch Identified\033[0;0m\n\n"
+else
+  echo -e "\n\033[0;31m> Normal Branch Identified\033[0;0m\n\n"
 fi
 
 if [[ $TC_SEL != clang ]]; then
@@ -202,7 +205,7 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
-tctype='grep "$LC" ${OUT_DIR}/include/generated/compile.h'
+tctype=grep "$LC" ${OUT_DIR}/include/generated/compile.h
 
 message="$egear $KERNEL_NAME CI Build Successful "
 header="$ebeginner BUILD DETAILS : "
