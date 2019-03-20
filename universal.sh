@@ -35,9 +35,8 @@ export KERNEL_WORKING_DIR=$(dirname "$(pwd)")
 
 export KBUILD_BUILD_USER="Dencel"
 export KBUILD_BUILD_HOST="Zeus"
-export DEVICE="Santoni";
-export LC="LINUX_COMPILER"
-export ID_KEY="clang/"
+export DEVICE="HM4X";
+export ID_KEY="BRANCH_NAME=clang/"
 
 printenv | sed 's/=\(.*\)/="\1"/' > env.txt
 if [[ 'grep "$ID_KEY" env.txt' ]]; then
@@ -58,9 +57,11 @@ export FINAL_ZIP="${ZIP_DIR}/${ZIP_NAME}"
 export OUT_DIR="${SEMAPHORE_PROJECT_DIR}/out"
 export IMAGE_OUT="${SEMAPHORE_PROJECT_DIR}/out/arch/arm64/boot/Image.gz-dtb";
 
-if [ -e out ]; then
-  rm -rf out;
+if [ -e ${OUT_DIR} ]; then
+  echo -e "\n\033[0;32m> OUT folder already exists ! Deleting it.... \033[0;0m\n" ;
+  rm -rf ${OUT_DIR};
 else
+  echo -e "\n\033[0;32m> OUT folder doesn't exist ! Creating it.... \033[0;0m\n" ;
   mkdir -p out;
 fi;
 
@@ -204,7 +205,8 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
-source ${OUT_DIR}/include/generated/compile.h tctype="$LINUX_COMPILER"
+source ${OUT_DIR}/include/generated/compile.h 
+tctype="$LINUX_COMPILER"
 
 
 message="$egear $KERNEL_NAME CI Build Successful "
