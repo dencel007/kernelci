@@ -205,8 +205,7 @@ ebeginner="🔰"
 eclock="🕐"
 ecommit="🗒"
 ebook="📕"
-source ${OUT_DIR}/include/generated/compile.h 
-tctype="$LINUX_COMPILER"
+source ${OUT_DIR}/include/generated/compile.h tctype="$LINUX_COMPILER"
 
 
 message="$egear $KERNEL_NAME CI Build Successful "
